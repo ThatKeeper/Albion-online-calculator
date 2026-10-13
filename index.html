@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Calculadora de crafteo · Albion Online</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Calculadora de crafteo</h1>
+        <p>Albion Online · costos, plan de fabricación y resultados reales</p>
+      </div>
+      <div class="bar">
+        <button id="exp">Exportar todo</button>
+        <button id="imp">Importar</button>
+        <button id="rst">Reiniciar</button>
+        <button id="thm">Tema</button>
+      </div>
+    </header>
+
+    <input type="file" id="file" accept=".json" hidden>
+    <input type="file" id="imgfile" accept="image/*" hidden>
+
+    <nav id="nav">
+      <button data-t="calc">Calculadora</button>
+      <button data-t="comp">Comparador</button>
+      <button data-t="plan">Plan</button>
+      <button data-t="buy">Compras e inventario</button>
+      <button data-t="hist">Historial</button>
+      <button data-t="pr">Precios y ventas</button>
+    </nav>
+
+    <section class="tab" id="t-calc">
+      <div class="grid">
+        <div>
+          <div class="pn">
+            <h2>Objeto</h2>
+            <div class="hero">
+              <button class="slot lg" id="itemImg" data-img="item" title="Imagen del objeto"></button>
+              <div>
+                <div class="hn" id="hname"></div>
+                <div class="hs" id="hsub"></div>
+              </div>
+            </div>
+
+            <div class="f">
+              <label>Objeto
+                <input id="name" placeholder="Ej. Capucha de acechador">
+              </label>
+              <label>Tier
+                <select id="tier"></select>
+              </label>
+              <label>Encantamiento
+                <select id="ench"></select>
+              </label>
+              <label>Precio de venta
+                <input id="price" type="number" min="0" step="any">
+              </label>
+              <label>Retorno de recursos (%)
+                <input id="rr" type="number" min="0" max="100" step="any">
+              </label>
+              <label>Otros costos por unidad
+                <input id="extras" type="number" min="0" step="any">
+              </label>
+              <label>Impuesto de venta
+                <select id="tax">
+                  <option value="0">Sin impuesto</option>
+                  <option value="4">Premium 4%</option>
+                  <option value="8">Sin premium 8%</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="chips" id="presets"></div>
+            <p class="note">Atajos de retorno típicos (base, bono de ciudad, foco, ambos). Ajústalos si el juego cambia.</p>
+          </div>
+
+          <div class="pn">
+            <h2>Materiales por unidad</h2>
+            <div class="sc">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Material</th>
+                    <th>Tipo</th>
+                    <th>Cant.</th>
+                    <th>Precio unit.</th>
+                    <th class="r">Bruto</th>
+                    <th class="r">Efectivo</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="mats"></tbody>
+              </table>
+            </div>
+            <div class="bar" style="margin-top:10px">
+              <button data-a="addmat">Agregar material</button>
+            </div>
+            <p class="note">Los artefactos no reciben retorno.</p>
+          </div>
+
+          <div class="pn">
+            <h2>Ventas por ciudad</h2>
+            <div class="f" style="margin-bottom:10px">
+              <label>Objetivo de mercado (% del volumen diario)
+                <input id="share" type="number" min="0" max="100" step="any">
+              </label>
+            </div>
+            <div class="sc">
+              <table style="min-width:300px">
+                <thead>
+                  <tr>
+                    <th>Ciudad</th>
+                    <th>Volumen diario</th>
+                    <th class="r">Objetivo</th>
+                  </tr>
+                </thead>
+                <tbody id="cities"></tbody>
+                <tfoot>
+                  <tr>
+                    <td>Total</td>
+                    <td id="tv"></td>
+                    <td class="r" id="tu"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="pn">
+            <h2>Resultado por unidad</h2>
+            <div class="big">
+              <b id="profit"></b>
+              <span class="badge" id="badge"></span>
+            </div>
+            <dl id="res"></dl>
+          </div>
+
+          <div class="pn">
+            <h2>Lote objetivo</h2>
+            <dl id="lot"></dl>
+          </div>
+
+          <div class="pn">
+            <h2>Recetas guardadas</h2>
+            <div class="bar" style="margin-bottom:10px">
+              <button class="pri" data-a="save">Guardar receta actual</button>
+              <button data-a="new">Nueva receta</button>
+            </div>
+            <div id="saved"></div>
+            <p class="note">Se guardan en este navegador. Para otro equipo usa Exportar todo.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tab" id="t-comp">
+      <div class="pn">
+        <h2>Comparador de rentabilidad</h2>
+        <div class="sc" id="comp"></div>
+      </div>
+    </section>
+
+    <section class="tab" id="t-plan">
+      <div class="grid">
+        <div class="pn">
+          <h2>Qué fabricar</h2>
+          <div class="sc" id="planrows"></div>
+        </div>
+        <div>
+          <div class="pn">
+            <h2>Presupuesto y resumen</h2>
+            <label>Presupuesto disponible
+              <input id="budget" type="number" min="0" step="any" data-c="budget">
+            </label>
+            <dl id="plansum" style="margin-top:12px"></dl>
+            <div class="bar" style="margin-top:12px">
+              <button data-a="fit">Ajustar al presupuesto</button>
+              <button class="pri" data-a="road">Copiar hoja de ruta</button>
+              <button data-a="craft">Registrar fabricación</button>
+            </div>
+            <p class="note">Registrar fabricación descuenta del inventario los materiales usados y lo anota en el historial.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tab" id="t-buy">
+      <div class="grid">
+        <div class="pn">
+          <h2>Lista de compra</h2>
+          <div id="buylist"></div>
+        </div>
+        <div class="pn">
+          <h2>Inventario disponible</h2>
+          <div id="inv"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tab" id="t-hist">
+      <div class="pn">
+        <h2>Registrar movimiento</h2>
+        <div class="f">
+          <label>Tipo
+            <select id="h-type">
+              <option value="fab">Fabricación</option>
+              <option value="venta">Venta</option>
+              <option value="precio">Precio de mercado</option>
+            </select>
+          </label>
+          <label>Receta
+            <select id="h-name"></select>
+          </label>
+          <label>Cantidad
+            <input id="h-q" type="number" min="1" value="1">
+          </label>
+          <label>Precio unitario real
+            <input id="h-p" type="number" min="0" step="any" placeholder="Vacío = estimado">
+          </label>
+          <label>Ciudad
+            <select id="h-city"></select>
+          </label>
+          <label>Fecha
+            <input id="h-d" type="date">
+          </label>
+        </div>
+        <div class="bar" style="margin-top:12px">
+          <button class="pri" data-a="log">Registrar</button>
+        </div>
+        <p class="note">En fabricación el precio es el costo real por unidad; en venta, el precio al que vendiste.</p>
+      </div>
+
+      <div class="pn">
+        <h2>Estadísticas reales</h2>
+        <div class="sc" id="stats"></div>
+      </div>
+
+      <div class="pn">
+        <h2>Movimientos</h2>
+        <div class="bar" style="margin-bottom:10px">
+          <select id="h-f" data-c="hf" style="width:auto;margin:0">
+            <option value="">Todos</option>
+            <option value="fab">Fabricación</option>
+            <option value="venta">Venta</option>
+            <option value="precio">Precio visto</option>
+            <option value="compra">Compra</option>
+          </select>
+          <button data-a="csv">Exportar CSV</button>
+        </div>
+        <div class="sc" id="hist"></div>
+        <p class="note">Fecha, cantidad y precio se editan directamente en la tabla.</p>
+      </div>
+    </section>
+
+    <section class="tab" id="t-pr">
+      <div class="pn">
+        <h2>Ventas realizadas</h2>
+        <div class="sc" id="sales"></div>
+        <p class="note">Los botones +1, +5 y +10 anotan una venta al último precio usado. Se pueden deshacer.</p>
+      </div>
+
+      <div class="pn">
+        <h2>Gráfico de precios</h2>
+        <div class="f">
+          <label>Receta
+            <select id="c-r" data-c="cf" data-k="r"></select>
+          </label>
+          <label>Ciudad
+            <select id="c-c" data-c="cf" data-k="c"></select>
+          </label>
+          <label>Desde
+            <input type="date" id="c-a" data-c="cf" data-k="a">
+          </label>
+          <label>Hasta
+            <input type="date" id="c-b" data-c="cf" data-k="b">
+          </label>
+          <label>Agrupar por
+            <select id="c-g" data-c="cf" data-k="g">
+              <option value="1">Día</option>
+              <option value="7">Semana</option>
+              <option value="30">Mes</option>
+            </select>
+          </label>
+          <label>Últimos N días
+            <input type="number" id="c-n" min="0" placeholder="Todo" data-c="cf" data-k="days">
+          </label>
+        </div>
+        <div class="chips" id="c-rg"></div>
+        <div class="chips" id="c-s"></div>
+        <div id="chart"></div>
+        <p class="note" id="c-note"></p>
+        <dl id="c-sum" style="margin-top:10px"></dl>
+        <div class="bar" style="margin-top:10px">
+          <button data-a="applyp">Usar el último precio como precio de la receta</button>
+        </div>
+      </div>
+
+      <div class="pn">
+        <h2>Anotar venta o precio</h2>
+        <div class="f" id="qa">
+          <label>Tipo
+            <select id="q-t">
+              <option value="venta">Venta</option>
+              <option value="precio">Precio de mercado</option>
+            </select>
+          </label>
+          <label>Precio unitario
+            <input id="q-p" type="number" min="0" step="any">
+          </label>
+          <label>Cantidad
+            <input id="q-q" type="number" min="1" value="1">
+          </label>
+          <label>Ciudad
+            <select id="q-c"></select>
+          </label>
+          <label>Fecha
+            <input type="date" id="q-d">
+          </label>
+        </div>
+        <div class="bar" style="margin-top:12px">
+          <button class="pri" data-a="qlog">Agregar</button>
+        </div>
+        <p class="note">Se anota para la receta elegida en el gráfico. Enter también registra.</p>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
